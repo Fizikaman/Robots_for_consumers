@@ -63,3 +63,31 @@ def add_robot(request):
         {'message': 'Полученные данные не соотвествуют ожиданиям'},
         status=HTTPStatus.BAD_REQUEST
     )
+
+
+@require_http_methods(['GET'])
+def download_production_list(request):
+    """
+    Вью функция для получение ексель файла с информацией о
+    произведенных роботах за последние N дней.
+    """
+    # Получаем сводную информацию о произведенных роботах
+    robots = Robot.objects.filter(
+        created__date__gte=get_difference_datetime_from_today(
+            days=NUMBER_OF_DAYS_TO_UPLOAD_A_FILE
+        )
+    ).values('model__name', 'version__name').annotate(robot_count=Count('id'))
+
+    # Создаем xlsx файл
+    prod_list = create_production_list(robots)
+
+    # Возвращаем файл в ответе
+    if os.path.exists(prod_list):
+        with open(prod_list, 'rb') as fh:
+            response = HttpResponse(
+                fh.read(),
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+            response['Content-Disposition'] = 'attachment; filename=production_list.xlsx'
+        return response
+    return Http404
