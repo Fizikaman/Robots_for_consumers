@@ -8,6 +8,33 @@ from django.core.mail import send_mail
 from django.db.models.query import QuerySet
 
 
+def create_production_list(robots: QuerySet) -> str:
+    """
+    Функция для создания xlsx файла со сводной
+    информацией о произведенных роботах.
+    """
+    dict_robots = {}
+    for robot in robots:
+        dict_robots[robot['model__name']] = dict_robots.get(
+            robot['model__name'], []
+        ) + [robot]
+
+    workbook = xlsxwriter.Workbook('production_list/robots_list.xlsx')
+    workbook.set_properties({'encoding': 'utf-8'})
+    for model, list_models in dict_robots.items():
+        worksheet = workbook.add_worksheet(name=model)
+        worksheet.write(0, 0, 'Модель')
+        worksheet.write(0, 1, 'Версия')
+        worksheet.write(0, 2, 'Количество за неделю')
+        for ind, robot in enumerate(list_models):
+            worksheet.write(ind+1, 0, robot['model__name'])
+            worksheet.write(ind+1, 1, robot['version__name'])
+            worksheet.write(ind+1, 2, robot['robot_count'])
+    workbook.close()
+
+    return os.path.join(settings.BASE_DIR, 'production_list/robots_list.xlsx')
+
+
 def get_difference_datetime_from_today(days: int) -> date:
     """Функция для получения даты <days> дней назад."""
     start_date = timezone.now().date() - timedelta(days=days)
