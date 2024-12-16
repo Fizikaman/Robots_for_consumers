@@ -31,18 +31,18 @@ HOST_PASSWORD=
 EMAIL_HOST=
 EMAIL_PORT=
 ```
-5. Выполнить миграции:
+5. Накатить миграции:
 
 ```
 python manage.py migrate
 ```
 
-6. Создать суперпользователя
+6. Создать суперпользователя:
 ```
 python manage.py createsuperuser
 ```
 
-7. Запустить проект:
+7. Запустить сервер:
 
 ```
 python manage.py runserver
